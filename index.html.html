@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Alcedo Eindejaarsquiz</title>
+<style>
+  :root{
+    --bg:#d2c0ad;
+    --card:#f7f2ed;
+    --ink:#1f2426;
+    --muted:#4a4f52;
+    --accent:#7a6b5f;
+    --radius:18px;
+    --danger:#b33636;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--ink);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:18px;
+  }
+  .app{width:min(980px,100%);}
+  .panel{
+    background:var(--card); border-radius:var(--radius);
+    padding:22px; box-shadow:0 8px 30px rgba(0,0,0,.08);
+  }
+  h1{font-size:clamp(20px,3vw,30px); margin:0 0 8px}
+  h2{margin:8px 0 10px; font-size:clamp(18px,2.2vw,22px)}
+  p{color:var(--muted); margin:0 0 12px; line-height:1.6}
+  .grid{
+    display:grid; gap:12px;
+    grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+    margin-top:8px;
+  }
+  button{
+    appearance:none; border:0; cursor:pointer;
+    background:white; color:var(--ink);
+    padding:14px 14px; border-radius:14px; font-size:16px; font-weight:600;
+    box-shadow:0 2px 0 rgba(0,0,0,.06);
+    transition:transform .06s ease, box-shadow .06s ease, background .2s ease, opacity .2s ease;
+  }
+  button:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.10)}
+  button.secondary{background:transparent; border:2px solid var(--accent)}
+  button.choice{display:flex; align-items:center; justify-content:center; min-height:64px;}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .question{
+    font-size:clamp(18px,2.6vw,26px); font-weight:700; line-height:1.5;
+    padding:16px; border-radius:12px; background:white;
+  }
+  .footer{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .hidden{display:none !important;}
+  .progress{margin-top:10px; font-size:13px; color:var(--muted);}
+  .reset{ text-decoration:underline; background:transparent; padding:0; font-weight:600; color:var(--muted); box-shadow:none;}
+  .langswitch{display:flex; gap:8px; justify-content:flex-end; margin-bottom:6px;}
+  .langswitch button{padding:6px 10px; font-size:12px; font-weight:800; border-radius:999px;}
+  .input-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:6px;}
+  input[type="text"]{padding:10px 12px; border-radius:10px; border:1px solid #ddd; width:min(340px,100%); font-size:15px;}
+  .players{margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;}
+  .player-chip{background:white; padding:6px 10px; border-radius:999px; font-size:13px; font-weight:700; border:2px solid transparent;}
+  .player-chip.active{ border-color: var(--accent); }
+  .tokens{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;}
+  .token{font-size:14px; padding:8px 10px; border-radius:10px; background:white; border:2px solid var(--accent); font-weight:700;}
+  .token.used{color:var(--danger); border-color:var(--danger); text-decoration:line-through; opacity:.7; cursor:not-allowed;}
+  .token small{display:block; font-weight:600; opacity:.8}
+  .note{font-size:12px; color:var(--muted)}
+  /* warm welcome */
+  .welcome-card{
+    background:white; border-radius:14px; padding:16px 16px; margin-bottom:12px;
+    border:1px solid #eee;
+  }
+  ul.rules{margin:6px 0 0 18px; color:var(--muted); line-height:1.6;}
+  .section-title{font-weight:800; color:var(--ink); margin:0 0 4px; font-size:16px;}
+  .tagline{font-size:14px; color:var(--muted); margin-top:4px;}
+  /* text-only context line */
+  .context-line{
+    font-size:15px; font-weight:800; color:var(--ink);
+    margin-bottom:6px;
+  }
+  .context-line span{color:var(--muted); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="app panel">
+
+  <div class="langswitch">
+    <button id="lang-nl">NL</button>
+    <button id="lang-en">EN</button>
+  </div>
+
+  <h1 id="title"></h1>
+
+  <!-- SCREEN 0 -->
+  <section id="screen-welcome">
+    <div class="welcome-card">
+      <div class="section-title" id="welcome-head"></div>
+      <p id="welcome-text"></p>
+      <div class="tagline" id="welcome-tag"></div>
+    </div>
+
+    <div class="welcome-card">
+      <div class="section-title" id="method-head"></div>
+      <ul class="rules" id="method-list"></ul>
+    </div>
+
+    <div class="welcome-card">
+      <div class="section-title" id="safety-head"></div>
+      <ul class="rules" id="safety-list"></ul>
+    </div>
+
+    <h2 id="players-title" style="margin-top:14px;"></h2>
+    <p id="players-help"></p>
+    <div class="input-row">
+      <input id="player-name" type="text" placeholder="Naam speler / Player name" />
+      <button id="add-player"></button>
+      <button id="start-game" class="secondary"></button>
+    </div>
+    <div class="players" id="players-list"></div>
+    <p class="note" id="players-note"></p>
+  </section>
+
+  <!-- SCREEN 1: CATEGORY -->
+  <section id="screen-category" class="hidden">
+    <div class="context-line" id="context-cat"></div>
+    <div class="grid">
+      <button class="choice" data-cat="self" id="b-self"></button>
+      <button class="choice" data-cat="family" id="b-family"></button>
+      <button class="choice" data-cat="business" id="b-business"></button>
+      <button class="choice" data-cat="couple" id="b-couple"></button>
+    </div>
+
+    <div class="footer">
+      <button class="secondary" id="back-to-welcome"></button>
+      <button id="next-player-from-cat"></button>
+    </div>
+
+    <div id="tokens-area" class="tokens"></div>
+  </section>
+
+  <!-- SCREEN 2: LEVEL -->
+  <section id="screen-level" class="hidden">
+    <div class="context-line" id="context-level"></div>
+    <div class="grid">
+      <button class="choice" data-level="light" id="b-light"></button>
+      <button class="choice" data-level="deep" id="b-deep"></button>
+    </div>
+
+    <div class="footer">
+      <button class="secondary" id="back-to-category"></button>
+    </div>
+
+    <div id="tokens-area-2" class="tokens"></div>
+  </section>
+
+  <!-- SCREEN 3: QUESTION -->
+  <section id="screen-question" class="hidden">
+    <div class="context-line" id="context-question"></div>
+    <div class="question" id="question-text" style="margin-top:8px;"></div>
+    <div class="progress" id="progress"></div>
+
+    <div class="footer">
+      <button id="next-player"></button>
+      <button id="reset-session" class="reset"></button>
+    </div>
+
+    <div id="tokens-area-3" class="tokens"></div>
+  </section>
+</div>
+
+<script>
+/*** TEXT + UI ***/
+const text = {
+  nl:{
+    title:"Alcedo Eindejaarsquiz",
+    welcomeHead:"Welkom",
+    welcome:"Welkom bij de Alcedo Eindejaarsquiz. Dit spel helpt je om met meer rust, nieuwsgierigheid en verbinding het jaar af te sluiten.",
+    welcomeTag:"Vier categorieën, twee sferen, één vraag per beurt.",
+    methodHead:"Zo werkt het",
+    methodList:[
+      "De actieve speler kiest een categorie: <b>Jezelf, Familie, Bedrijf</b> of <b>Koppel</b>.",
+      "Daarna kiest de speler de sfeer: <b>Luchtig</b> of <b>Diepgaander</b>.",
+      "Er verschijnt één vraag uit dat blok. Binnen elk blok komen alle 10 vragen één keer aan bod vóór er herhaling is.",
+      "Na de vraag keer je terug naar het startscherm. Volgende speler aan de beurt."
+    ],
+    safetyHead:"Spelafspraak",
+    safetyList:[
+      "Geen discussie, wél nieuwsgierigheid.",
+      "Je mag altijd passen.",
+      "Luister om te begrijpen, niet om te overtuigen."
+    ],
+    playersTitle:"Spelers toevoegen (optioneel)",
+    playersHelp:"Geef namen in (één per keer). Je kan spelers blijven toevoegen tijdens het spel.",
+    playersNote:"Geen namen ingevoerd? Dan speel je met Speler 1, Speler 2, ...",
+    addPlayer:"+ Speler toevoegen",
+    start:"Start spel →",
+    info:"← Info",
+    nextPlayer:"Volgende speler →",
+    back:"← Terug",
+    self:"Jezelf", family:"Familie", business:"Bedrijf", couple:"Koppel",
+    light:"Luchtig", deep:"Diepgaander",
+    player:"Speler",
+    contextCat:(p)=>`${p} <span>• kies een categorie</span>`,
+    contextLevel:(p,c)=>`${p} <span>• ${c} • kies een sfeer</span>`,
+    contextQuestion:(p,c,l)=>`${p} <span>• ${c} • ${l}</span>`,
+    progress:(u,t)=>`Vraag ${u} van ${t} in dit blok.`,
+    reset:"sessie resetten",
+    tokensTitle:"Persoonlijke kaarten",
+    tokens:[
+      {key:"pass", label:"Pasvraag", desc:"Sla 1 vraag over"},
+      {key:"give", label:"Doorgeefkaart", desc:"Laat iemand anders antwoorden"},
+      {key:"duo", label:"Duo-kaart", desc:"Beantwoord samen"},
+      {key:"mirror", label:"Spiegelkaart", desc:"Stel de vraag terug aan iemand anders"}
+    ]
+  },
+  en:{
+    title:"Alcedo Year-End Quiz",
+    welcomeHead:"Welcome",
+    welcome:"Welcome to the Alcedo Year-End Quiz. This game helps you close the year with calm, curiosity and connection.",
+    welcomeTag:"Four categories, two tones, one question per turn.",
+    methodHead:"How it works",
+    methodList:[
+      "The active player chooses a category: <b>Yourself, Family, Business</b> or <b>Couple</b>.",
+      "Then the player chooses the tone: <b>Light</b> or <b>Deeper</b>.",
+      "One question appears from that block. Each block cycles through all 10 questions before repeating.",
+      "After the question, return to the start screen. Next player’s turn."
+    ],
+    safetyHead:"Game agreement",
+    safetyList:[
+      "No debating—only curiosity.",
+      "You may always pass.",
+      "Listen to understand, not to convince."
+    ],
+    playersTitle:"Add players (optional)",
+    playersHelp:"Enter names one by one. You can keep adding players during the game.",
+    playersNote:"No names? Then you play with Player 1, Player 2, ...",
+    addPlayer:"+ Add player",
+    start:"Start game →",
+    info:"← Info",
+    nextPlayer:"Next player →",
+    back:"← Back",
+    self:"Yourself", family:"Family", business:"Business", couple:"Couple",
+    light:"Light", deep:"Deeper",
+    player:"Player",
+    contextCat:(p)=>`${p} <span>• choose a category</span>`,
+    contextLevel:(p,c)=>`${p} <span>• ${c} • choose a tone</span>`,
+    contextQuestion:(p,c,l)=>`${p} <span>• ${c} • ${l}</span>`,
+    progress:(u,t)=>`Question ${u} of ${t} in this block.`,
+    reset:"reset session",
+    tokensTitle:"Personal cards",
+    tokens:[
+      {key:"pass", label:"Pass", desc:"Skip one question"},
+      {key:"give", label:"Pass-on card", desc:"Let someone else answer"},
+      {key:"duo", label:"Duo card", desc:"Answer together"},
+      {key:"mirror", label:"Mirror card", desc:"Reflect the question to someone else"}
+    ]
+  }
+};
+
+let L="nl";
+
+/*** DECKS ***/
+const decksNL = { self:{light:["Waarin vullen jullie elkaar onverwacht goed aan?",
+  "Welke kleine actie van de ander waardeer je het meest?",
+  "Wat is een moment waarop jullie echt als team voelden?",
+  "Wat bewonder je het meest aan je partner/collega?",
+  "Wat zou je willen dat de ander vaker zegt of doet?",
+  "Wie is bij jullie de visionaire dromer en wie de realistische rem?",
+  "Als jullie een bekend duo uit een serie of film waren, wie zijn jullie?",
+  "Wat maakt jullie uniek als duo?",
+  "Welke eigenschap van de ander vind je gewoon heel leuk?",
+  "Wat brengt jullie als koppel plezier (ook in samenwerking)?",
+  "Waarin ben je dit jaar gegroeid dankzij de ander?",
+  "Wat is jullie meest geslaagde ‘team-moment’ dit jaar?",
+  "Welke taakverdeling werkt bij jullie verrassend goed?",
+  "Wat is iets dat jullie samenwerking lichter maakt?",
+  "Wat willen jullie samen vieren aan het einde van dit jaar?"],deep:["Welke overtuiging draag je mee die misschien aan vervanging toe is?",
+  "Waar verlang je stiekem meer naar in je leven?",
+  "Waar twijfel je het vaakst aan?",
+  "Welk terugkerend patroon wil je doorbreken?",
+  "Waar wens jij soms meer helderheid of richting in samenwerking met anderen?",
+  "Wat heb je de laatste jaren over jezelf geleerd dat je verraste?",
+  "Als je morgen opnieuw mocht beginnen, wat laat je dan achter?",
+  "Waarover denk je veel na, maar praat je weinig?",
+  "Welke emotie laat je het minst graag zien?",
+  "Wat zou je jongere ik vinden van wie je nu bent?",
+  "Welke moeilijke beslissing maakt je trots?",
+  "Welke spanning in samenwerking zou je graag eens met een neutrale derde verkennen?",
+  "Wat zou jij willen dat een buitenstaander over jouw rol in het geheel begrijpt?",
+  "Welke waarde wil je explicieter uitdragen in je werk en leven?",
+  "Welke waarheid zou opluchten als ze eens veilig uitgesproken werd?"]}, family:{light:["Waarin vullen jullie elkaar onverwacht goed aan?",
+  "Welke kleine actie van de ander waardeer je het meest?",
+  "Wat is een moment waarop jullie echt als team voelden?",
+  "Wat bewonder je het meest aan je partner/collega?",
+  "Wat zou je willen dat de ander vaker zegt of doet?",
+  "Wie is bij jullie de visionaire dromer en wie de realistische rem?",
+  "Als jullie een bekend duo uit een serie of film waren, wie zijn jullie?",
+  "Wat maakt jullie uniek als duo?",
+  "Welke eigenschap van de ander vind je gewoon heel leuk?",
+  "Wat brengt jullie als koppel plezier (ook in samenwerking)?",
+  "Waarin ben je dit jaar gegroeid dankzij de ander?",
+  "Wat is jullie meest geslaagde ‘team-moment’ dit jaar?",
+  "Welke taakverdeling werkt bij jullie verrassend goed?",
+  "Wat is iets dat jullie samenwerking lichter maakt?",
+  "Wat willen jullie samen vieren aan het einde van dit jaar?"],deep:["Welke familiewaarden draag je bewust mee in je leven?",
+  "Welke familiedynamiek vind je het meest uitdagend?",
+  "Wat wens je dat de volgende generatie anders doet dan jouw generatie?",
+  "Welke gesprekken worden binnen jullie familie te weinig gevoerd?",
+  "Welke thema’s zouden makkelijker besproken worden mocht er iemand zijn die het gesprek begeleidt?",
+  "Welke afspraken zouden toekomstig conflict kunnen voorkomen als ze eens expliciet gemaakt worden?",
+  "Wat zou je familie verbaasd doen opkijken als je het zou zeggen?",
+  "Hoe gaan jullie als familie typisch om met conflicten?",
+  "Welke gebeurtenis heeft jullie familie sterk gevormd?",
+  "Wat hoop je dat later over jullie familie verteld wordt?",
+  "Wat is een onuitgesproken regel in jullie familie?",
+  "Welke vraag zou je eigenlijk aan je ouders of grootouders willen stellen?",
+  "Als jullie één familiewaarde officieel zouden vastleggen, welke is dat?",
+  "Over welk thema zou een externe gespreksbegeleider jullie het snelst vooruit helpen?",
+  "Welke afspraak hoort volgens jou thuis in een familiecharter om later gedoe te vermijden?"]}, business:{light:["Waarin vullen jullie elkaar onverwacht goed aan?",
+  "Welke kleine actie van de ander waardeer je het meest?",
+  "Wat is een moment waarop jullie echt als team voelden?",
+  "Wat bewonder je het meest aan je partner/collega?",
+  "Wat zou je willen dat de ander vaker zegt of doet?",
+  "Wie is bij jullie de visionaire dromer en wie de realistische rem?",
+  "Als jullie een bekend duo uit een serie of film waren, wie zijn jullie?",
+  "Wat maakt jullie uniek als duo?",
+  "Welke eigenschap van de ander vind je gewoon heel leuk?",
+  "Wat brengt jullie als koppel plezier (ook in samenwerking)?",
+  "Waarin ben je dit jaar gegroeid dankzij de ander?",
+  "Wat is jullie meest geslaagde ‘team-moment’ dit jaar?",
+  "Welke taakverdeling werkt bij jullie verrassend goed?",
+  "Wat is iets dat jullie samenwerking lichter maakt?",
+  "Wat willen jullie samen vieren aan het einde van dit jaar?"],deep:["Wat is de grootste blinde vlek binnen het bedrijf?",
+  "Welke droom voor het bedrijf durf je nog niet hardop uit te spreken?",
+  "Wat houdt jullie als organisatie soms tegen om te groeien?",
+  "Welke toekomstscenario’s worden te weinig besproken?",
+  "Welke onderwerpen blijven vaak liggen omdat niemand ze wil openen?",
+  "Wat zou je willen dat toekomstige (familie)generaties weten over jullie keuzes en visie?",
+  "Welke terugkerende uitdaging blijft liggen?",
+  "Wat zou je graag meer erkennen binnen het bedrijf?",
+  "Welke innovatie wil je al lang doorvoeren?",
+  "Wat is een misverstand dat binnen de organisatie leeft?",
+  "Welke beslissing heeft jou ooit ’s nachts wakker gehouden?",
+  "Wat kost vandaag structureel te veel energie?",
+  "Welke strategische knoop zou je het liefst met een onafhankelijke sparringpartner ontwarren?",
+  "Welke gedeelde waarde wil je expliciet in jullie toekomstvisie zetten?",
+  "Wat zou er gebeuren als jullie met een neutrale moderator één lastig thema echt uitdiepen?"]}, couple:{light:["Waarin vullen jullie elkaar onverwacht goed aan?",
+  "Welke kleine actie van de ander waardeer je het meest?",
+  "Wat is een moment waarop jullie echt als team voelden?",
+  "Wat bewonder je het meest aan je partner/collega?",
+  "Wat zou je willen dat de ander vaker zegt of doet?",
+  "Wie is bij jullie de visionaire dromer en wie de realistische rem?",
+  "Als jullie een bekend duo uit een serie of film waren, wie zijn jullie?",
+  "Wat maakt jullie uniek als duo?",
+  "Welke eigenschap van de ander vind je gewoon heel leuk?",
+  "Wat brengt jullie als koppel plezier (ook in samenwerking)?",
+  "Waarin ben je dit jaar gegroeid dankzij de ander?",
+  "Wat is jullie meest geslaagde ‘team-moment’ dit jaar?",
+  "Welke taakverdeling werkt bij jullie verrassend goed?",
+  "Wat is iets dat jullie samenwerking lichter maakt?",
+  "Wat willen jullie samen vieren aan het einde van dit jaar?"],deep:["Had je jullie samenwerking als koppel zo voorgesteld toen je begon?",
+  "Waar botsen jullie meestal op?",
+  "Wat heeft de ander volgens jou nodig — maar zegt hij/zij niet?",
+  "Wat zou je graag bijsturen in jullie samenwerking?",
+  "Welke gesprekken zouden jullie makkelijker voeren als iemand het gesprek zou begeleiden?",
+  "Wat is een gesprek dat jullie al lang eens zouden moeten voeren?",
+  "Wat neem je soms te vanzelfsprekend aan in de ander?",
+  "Wat helpt jullie om opnieuw verbinding te vinden na spanning?",
+  "Wat is volgens jou jullie grootste gezamenlijke kracht?",
+  "Wat zou jouw partner verrassen als je het nu zou zeggen?",
+  "Wat wil jij dat later over jullie duo gezegd wordt?",
+  "Welke spanning verdienen volgens jou een begeleid gesprek zodat het niet blijft sluimeren?",
+  "Welke gezamenlijke waarde moet bovenaan jullie ‘wij-kompas’ staan?",
+  "Wat zouden jullie graag vastleggen om misverstanden in de toekomst te voorkomen?",
+  "Wat heb je nodig om je kwetsbaarheid hierin helemaal te kunnen tonen?"]}};
+
+const decksEN = { self:{light:["Where do you complement each other well?",
+  "Which small action of the other do you appreciate most?",
+  "A moment when you truly felt like a team?",
+  "What do you admire most in your partner/colleague?",
+  "What do you wish the other would say or do more often?",
+  "Who is the dreamer and who is the realist in your duo?",
+  "If you were a famous duo from a film or series, who would you be?",
+  "What makes you unique as a duo?",
+  "Which trait of the other do you simply enjoy?",
+  "What brings you joy together (also in collaboration)?",
+  "In what way have you grown thanks to the other this year?",
+  "What was your most successful ‘team moment’ this year?",
+  "Which division of tasks works surprisingly well for you?",
+  "What makes your collaboration feel lighter?",
+  "What do you want to celebrate together at the end of this year?"],deep:["Which belief are you ready to let go of?",
+  "What do you secretly long for?",
+  "What do you doubt most often?",
+  "Which recurring pattern do you want to break?",
+  "Where do you sometimes wish for more clarity or direction in working with others?",
+  "What have you learned about yourself that surprised you?",
+  "If you could start over tomorrow, what would you leave behind?",
+  "What do you think about a lot but rarely say aloud?",
+  "Which emotion do you show least easily?",
+  "What would your younger self think of you now?",
+  "Which difficult decision makes you proud?",
+  "Which tension in collaboration would you like to explore with a neutral third person?",
+  "What would you want an outsider to understand about your role in the bigger picture?",
+  "Which value do you want to express more explicitly in your work and life?",
+  "Which truth would feel relieving to say out loud in a safe setting?"]}, family:{light:["Where do you complement each other well?",
+  "Which small action of the other do you appreciate most?",
+  "A moment when you truly felt like a team?",
+  "What do you admire most in your partner/colleague?",
+  "What do you wish the other would say or do more often?",
+  "Who is the dreamer and who is the realist in your duo?",
+  "If you were a famous duo from a film or series, who would you be?",
+  "What makes you unique as a duo?",
+  "Which trait of the other do you simply enjoy?",
+  "What brings you joy together (also in collaboration)?",
+  "In what way have you grown thanks to the other this year?",
+  "What was your most successful ‘team moment’ this year?",
+  "Which division of tasks works surprisingly well for you?",
+  "What makes your collaboration feel lighter?",
+  "What do you want to celebrate together at the end of this year?"],deep:["Which family values do you carry consciously?",
+  "Which family dynamic challenges you most?",
+  "What do you hope the next generation does differently?",
+  "Which conversations are missing in your family?",
+  "Which topics would be easier to discuss if someone were guiding the conversation?",
+  "Which agreements could prevent future conflict if you made them explicit now?",
+  "What would surprise your family if you said it?",
+  "How does your family typically handle conflict?",
+  "Which event shaped your family strongly?",
+  "What do you hope will be said about your family in the future?",
+  "What is an unspoken rule in your family?",
+  "What question would you still like to ask your parents or grandparents?",
+  "If you could officially write down one family value, which would it be?",
+  "On which theme would an external facilitator help you move forward fastest?",
+  "Which agreement belongs in a family charter to prevent future friction?"]}, business:{light:["Where do you complement each other well?",
+  "Which small action of the other do you appreciate most?",
+  "A moment when you truly felt like a team?",
+  "What do you admire most in your partner/colleague?",
+  "What do you wish the other would say or do more often?",
+  "Who is the dreamer and who is the realist in your duo?",
+  "If you were a famous duo from a film or series, who would you be?",
+  "What makes you unique as a duo?",
+  "Which trait of the other do you simply enjoy?",
+  "What brings you joy together (also in collaboration)?",
+  "In what way have you grown thanks to the other this year?",
+  "What was your most successful ‘team moment’ this year?",
+  "Which division of tasks works surprisingly well for you?",
+  "What makes your collaboration feel lighter?",
+  "What do you want to celebrate together at the end of this year?"],deep:["What is the company's biggest blind spot?",
+  "Which dream for the company do you hesitate to say out loud?",
+  "What holds the organization back from growing?",
+  "Which future scenarios are not being discussed?",
+  "Which subjects often remain untouched because no one wants to open them?",
+  "What would you want future (family) generations to know about your choices and vision?",
+  "Which recurring challenge remains unresolved?",
+  "What would you like to acknowledge more in the company?",
+  "Which innovation have you wanted to implement for a long time?",
+  "What misunderstanding exists within the company?",
+  "Which decision once kept you awake at night?",
+  "What drains too much structural energy today?",
+  "Which strategic knot would you like to untangle with an independent sparring partner?",
+  "Which shared value should be clearly stated in your future vision?",
+  "What might change if a neutral moderator helped you fully unpack one difficult topic?"]}, couple:{light:["Where do you complement each other well?",
+  "Which small action of the other do you appreciate most?",
+  "A moment when you truly felt like a team?",
+  "What do you admire most in your partner/colleague?",
+  "What do you wish the other would say or do more often?",
+  "Who is the dreamer and who is the realist in your duo?",
+  "If you were a famous duo from a film or series, who would you be?",
+  "What makes you unique as a duo?",
+  "Which trait of the other do you simply enjoy?",
+  "What brings you joy together (also in collaboration)?",
+  "In what way have you grown thanks to the other this year?",
+  "What was your most successful ‘team moment’ this year?",
+  "Which division of tasks works surprisingly well for you?",
+  "What makes your collaboration feel lighter?",
+  "What do you want to celebrate together at the end of this year?"],deep:["Did you imagine your collaboration like this when you started?",
+  "Where do you usually clash?",
+  "What does the other need — but doesn't say?",
+  "What would you like to adjust in your collaboration?",
+  "Which conversations would be easier for you if someone facilitated them?",
+  "Which conversation should you really have?",
+  "What do you sometimes take for granted in the other?",
+  "What helps you reconnect after tension?",
+  "What is your greatest shared strength?",
+  "What would surprise your partner if you said it now?",
+  "What do you hope will be said about you as a duo someday?",
+  "Which tensions deserve a facilitated conversation so they don’t keep simmering?",
+  "Which shared value should sit at the top of your ‘we-compass’?",
+  "What would you like to put in writing to prevent future misunderstandings?",
+  "What do you need to show full vulnerability in this?"]}};
+
+function currentDecks(){ return L==="nl" ? decksNL : decksEN; }
+
+/*** STATE ***/
+const usedQuestions={};
+let currentCategory=null, currentLevel=null;
+
+let players=[], currentPlayerIdx=0;
+const perPlayerTokens={};
+
+/*** HELPERS ***/
+function keyFor(cat, level){ return `${cat}|${level}`; }
+function pickQuestion(cat, level){
+  const key=keyFor(cat,level);
+  const deck=currentDecks()[cat][level];
+  if(!usedQuestions[key]) usedQuestions[key]=new Set();
+  if(usedQuestions[key].size>=deck.length) usedQuestions[key].clear();
+  let idx; do{ idx=Math.floor(Math.random()*deck.length); } while(usedQuestions[key].has(idx));
+  usedQuestions[key].add(idx);
+  return {text:deck[idx], usedCount:usedQuestions[key].size, total:deck.length};
+}
+
+function ensureDefaultPlayers(){
+  if(players.length===0){
+    players=[text[L].player+" 1",text[L].player+" 2",text[L].player+" 3",text[L].player+" 4"];
+  }
+  players.forEach(p=>{
+    if(!perPlayerTokens[p]) perPlayerTokens[p]={pass:false,give:false,duo:false,mirror:false};
+  });
+}
+function activePlayerName(){ ensureDefaultPlayers(); return players[currentPlayerIdx%players.length]; }
+function nextPlayer(){ currentPlayerIdx=(currentPlayerIdx+1)%players.length; }
+
+/*** UI refs ***/
+const screens={
+  welcome:document.getElementById("screen-welcome"),
+  cat:document.getElementById("screen-category"),
+  level:document.getElementById("screen-level"),
+  q:document.getElementById("screen-question")
+};
+const qText=document.getElementById("question-text");
+const progress=document.getElementById("progress");
+
+function show(screen){
+  Object.values(screens).forEach(s=>s.classList.add("hidden"));
+  screens[screen].classList.remove("hidden");
+  renderPlayers(); renderTokens(); renderContexts();
+}
+
+function renderPlayers(){
+  const listEl=document.getElementById("players-list");
+  listEl.innerHTML="";
+  players.forEach((p,i)=>{
+    const chip=document.createElement("div");
+    chip.className="player-chip"+(i===currentPlayerIdx?" active":"");
+    chip.textContent=p;
+    listEl.appendChild(chip);
+  });
+}
+
+function renderContexts(){
+  const pName=activePlayerName();
+  const cName=currentCategory ? text[L][currentCategory] : "";
+  const lName=currentLevel ? text[L][currentLevel] : "";
+  document.getElementById("context-cat").innerHTML = text[L].contextCat(`${text[L].player}: ${pName}`);
+  document.getElementById("context-level").innerHTML = text[L].contextLevel(`${text[L].player}: ${pName}`, cName);
+  document.getElementById("context-question").innerHTML = text[L].contextQuestion(`${text[L].player}: ${pName}`, cName, lName);
+}
+
+/*** tokens ***/
+function renderTokens(){
+  const pName=activePlayerName();
+  const tokens=text[L].tokens;
+  function make(containerId){
+    const el=document.getElementById(containerId);
+    if(!el) return;
+    el.innerHTML="";
+    const t=document.createElement("div");
+    t.className="note";
+    t.textContent=text[L].tokensTitle+" — "+pName;
+    el.appendChild(t);
+    tokens.forEach(tok=>{
+      const b=document.createElement("button");
+      b.className="token"+(perPlayerTokens[pName][tok.key]?" used":"");
+      b.innerHTML=`${tok.label}<small>${tok.desc}</small>`;
+      b.disabled=perPlayerTokens[pName][tok.key];
+      b.onclick=()=>{ perPlayerTokens[pName][tok.key]=true; renderTokens(); };
+      el.appendChild(b);
+    });
+  }
+  make("tokens-area"); make("tokens-area-2"); make("tokens-area-3");
+}
+
+/*** language apply ***/
+function applyLang(){
+  document.getElementById("title").textContent = text[L].title;
+  document.getElementById("welcome-head").textContent = text[L].welcomeHead;
+  document.getElementById("welcome-text").textContent = text[L].welcome;
+  document.getElementById("welcome-tag").textContent = text[L].welcomeTag;
+
+  document.getElementById("method-head").textContent = text[L].methodHead;
+  const ml=document.getElementById("method-list"); ml.innerHTML="";
+  text[L].methodList.forEach(li=>{ const el=document.createElement("li"); el.innerHTML=li; ml.appendChild(el); });
+
+  document.getElementById("safety-head").textContent = text[L].safetyHead;
+  const sl=document.getElementById("safety-list"); sl.innerHTML="";
+  text[L].safetyList.forEach(li=>{ const el=document.createElement("li"); el.innerHTML=li; sl.appendChild(el); });
+
+  document.getElementById("players-title").textContent = text[L].playersTitle;
+  document.getElementById("players-help").textContent = text[L].playersHelp;
+  document.getElementById("players-note").textContent = text[L].playersNote;
+  document.getElementById("add-player").textContent = text[L].addPlayer;
+  document.getElementById("start-game").textContent = text[L].start;
+  document.getElementById("back-to-welcome").textContent = text[L].info;
+  document.getElementById("next-player-from-cat").textContent = text[L].nextPlayer;
+  document.getElementById("back-to-category").textContent = text[L].back;
+  document.getElementById("next-player").textContent = text[L].nextPlayer;
+  document.getElementById("reset-session").textContent = text[L].reset;
+
+  document.getElementById("b-self").textContent = text[L].self;
+  document.getElementById("b-family").textContent = text[L].family;
+  document.getElementById("b-business").textContent = text[L].business;
+  document.getElementById("b-couple").textContent = text[L].couple;
+  document.getElementById("b-light").textContent = text[L].light;
+  document.getElementById("b-deep").textContent = text[L].deep;
+
+  renderTokens(); renderContexts();
+}
+
+document.getElementById("lang-nl").onclick=()=>{ L="nl"; applyLang(); };
+document.getElementById("lang-en").onclick=()=>{ L="en"; applyLang(); };
+
+/*** events ***/
+document.getElementById("add-player").onclick=()=>{
+  const input=document.getElementById("player-name");
+  const name=input.value.trim();
+  if(!name) return;
+  if(!players.includes(name)){
+    players.push(name);
+    perPlayerTokens[name]={pass:false,give:false,duo:false,mirror:false};
+  }
+  input.value=""; renderPlayers(); renderTokens(); renderContexts();
+};
+
+document.getElementById("start-game").onclick=()=>{ ensureDefaultPlayers(); show("cat"); };
+document.getElementById("back-to-welcome").onclick=()=>show("welcome");
+
+document.querySelectorAll("[data-cat]").forEach(btn=>{
+  btn.onclick=()=>{ currentCategory=btn.dataset.cat; currentLevel=null; show("level"); };
+});
+document.querySelectorAll("[data-level]").forEach(btn=>{
+  btn.onclick=()=>{
+    currentLevel=btn.dataset.level;
+    const r=pickQuestion(currentCategory,currentLevel);
+    qText.textContent=r.text;
+    progress.textContent=text[L].progress(r.usedCount,r.total);
+    show("q");
+  };
+});
+
+document.getElementById("back-to-category").onclick=()=>show("cat");
+document.getElementById("next-player-from-cat").onclick=()=>{ nextPlayer(); currentCategory=null; currentLevel=null; show("cat"); };
+document.getElementById("next-player").onclick=()=>{ nextPlayer(); currentCategory=null; currentLevel=null; show("cat"); };
+
+document.getElementById("reset-session").onclick=()=>{
+  for(const k in usedQuestions) usedQuestions[k].clear();
+  for(const p in perPlayerTokens) perPlayerTokens[p]={pass:false,give:false,duo:false,mirror:false};
+  currentPlayerIdx=0; currentCategory=null; currentLevel=null;
+  alert(L==="nl"?"Sessie gereset.":"Session reset.");
+  show("welcome");
+};
+
+applyLang(); show("welcome");
+</script>
+</body>
+</html>
